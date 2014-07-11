@@ -17,8 +17,37 @@ function PageHeader() {
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-   <title>Vanilla Porter - Forum Export Tool</title>
+   <title>Vanilla Porter Plus - Forum Export Tool</title>
    <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        (function($){
+            $(document).ready(function(){
+                $('form').delegate('input.ReplBox','keydown', function(){
+                    var sr = $('tr.PorterPlusRow:has(.Repl):first').clone();
+                    sr.find('input[type="text"]').val('');
+                    sr.find('input[type="checkbox"]').removeAttr('checked');
+                    if($('input.ReplBoxS:last').val()){
+
+                        $('#PorterPlusOptions tbody').append(sr);
+                    }
+                });
+                
+                var fixHelper = function(e, ui) {
+                    ui.children('td').each(function() {
+                        $(this).width($(this).width());
+                    });
+                    return ui;
+                };
+                $("#PorterPlusOptions tbody").sortable({
+                        helper:fixHelper
+                });
+
+            });
+        
+        })(jQuery)
+    </script>
 </head>
 <body>
 <div id="Frame">
@@ -26,7 +55,7 @@ function PageHeader() {
       <div class="Title">
          <h1>
             <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla" />
-            <p>Vanilla Porter <span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
+            <p>Vanilla Porter Plus<span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
          </h1>
       </div>
    <?php
@@ -80,6 +109,11 @@ function ViewForm($Data) {
       echo $msg."\n";
       return;
    }
+   
+    /*Porter plus*/
+    $SearchRepl = array_filter(GetValue('replsearch',null,array())) ;
+    $SearchRepl[]="";
+    /*Porter plus*/
 
    PageHeader(); ?>
    <div class="Info">
@@ -127,6 +161,29 @@ function ViewForm($Data) {
                <label>Database Password</label>
                <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>" />
             </li>
+            <!-- -porter plus options-->
+                <li>
+                   <label>Parse Operations</label>
+                    <table id="PorterPlusOptions">
+                        <tbody>
+                            <tr class="PorterPlusRow">
+                                <td><input class="CheckBox" type="checkbox" name="repl[]" value="phpBBfixes" <? echo GetValue('phpBBfixes')?'checked="checked"':''?> /></td><td><span class="Annotation">phpBB fixes (internal links,clean up smilies,quotes, etc)</span></td>
+                            </tr>
+                            <tr class="PorterPlusRow">
+                              <td><input class="CheckBox" type="checkbox" name="repl[]" value="bbcode2html" <? echo GetValue('bbcode2html')?'checked="checked"':''?> /></td><td><span class="Annotation">Convert bbcode to html</span></td>
+                            </tr>
+                            <tr class="PorterPlusRow">
+                                <td colspan="2">
+                                    <div class="Repl">
+                                        <input type="hidden" name="repl[]" value="replsearch"><input class="ReplBox ReplBoxS" type="text" name="replsearch[]"><span class="SearchAn">Search</span><span class="Annotation">to&nbsp;&nbsp;</span>
+                                        <input class="ReplBox" type="text" name="replrepl[]"><span class="ReplaceAn">Replace</span>&nbsp;<input class="CheckBox" type="checkbox" name="replrexp[]"><a class="Annotation" href="http://www.php.net/manual/en/book.pcre.php">PCRE</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </li>
+            <!-- -porter plus options end-->
          </ul>
          <div class="Button">
             <input class="Button" type="submit" value="Begin Export" />

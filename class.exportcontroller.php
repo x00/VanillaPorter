@@ -9,6 +9,10 @@
 abstract class ExportController {
    /** @var array Database connection info */
    protected $DbInfo = array();
+   
+    /*Porter Plus*/
+    protected $Options = array();
+    /*Porter Plus*/
 
    /** @var array Required tables, columns set per exporter */
    protected $SourceTables = array();
@@ -64,7 +68,21 @@ abstract class ExportController {
             $this->Ex->UseCompression(TRUE);
             $this->Ex->FilenamePrefix = $this->DbInfo['dbname'];
             set_time_limit(60*60);
-            
+            /*Porter Plus*/
+            $ParseFilter =array(
+                'Body'=>array($this->Ex, 'ParseOperations'),
+                'Name'=>array($this->Ex, 'ParseOperations'),
+                'Format'=>array($this->Ex, 'ParseOperations')
+            );
+            $this->Ex->SetTopLevelFilters(array(
+                'Comment' => $ParseFilter,
+                'Discussion' => $ParseFilter,
+                'ConversationMessage' => $ParseFilter
+            ));
+           
+           $this->Ex->SetOptions($this->Options);
+
+            /*Porter Plus*/
 //            ob_start();
             $this->ForumExport($this->Ex);
 //            $Errors = ob_get_clean();
@@ -88,6 +106,30 @@ abstract class ExportController {
     * User submitted db connection info
     */
    public function HandleInfoForm() {
+    /*Porter Plus*/
+    if(!defined('CONSOLE') && in_array('replsearch',$_POST['repl'])){
+        $_POST['searchreplace']=array();
+        foreach($_POST['replsearch'] As $ReplI => $ReplV){
+
+            if($ReplV){
+                $_POST['searchreplace'][$ReplV]=array("repl"=>@$_POST['replrepl'][$ReplI], "regexp"=>@$_POST['replexp'][$ReplI]);
+            }
+        }
+        unset($_POST['replrepl']);
+        unset($_POST['replexp']);
+        unset($_POST['replsearch']);
+        $this->Options=$_POST['repl'];
+    }else{
+        $this->Options=array(
+            'utf8force' => $_POST['utf8force'],
+            'bbcode2html' => $_POST['bbcode2html'],
+            'phpBBfixes' => $_POST['phpBBfixes']
+        );
+    }
+
+    $this->Options['searchreplace']=$_POST['searchreplace'];
+
+    /*Porter Plus*/
       $this->DbInfo = array(
          'dbhost' => $_POST['dbhost'],
          'dbuser' => $_POST['dbuser'],

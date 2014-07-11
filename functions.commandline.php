@@ -9,7 +9,13 @@ $GlobalOptions = array(
    'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
    'prefix' => array('The table prefix in the database.', 'Field' => 'prefix', 'Sx' => ':', 'Default' => ''),
    'cdn' => array('The prefix to be applied to uploaded file links.', 'Field' => 'cdn', 'Sx' => ':', 'Default' => ''),
-   'help' => array('Show help.')
+   'help' => array('Show help.'),
+    /*Porter Plus*/
+    'utf8force' => array('Forces UTF-8 on text fields', 'Field' => 'utf8force'),
+    'bbcode2html' => array('Coverts BBCode to html ', 'Field' => 'bbcode2html'),
+    'phpBBfixes' => array('Converts internal links vanilla style', 'Field' => 'phpBBfixes'),
+    'searchreplace' => array('Searches and replaces e.g \'{"www.mysite.com":{"repl":"mysite.com", "regexp":0}}\'', 'Field' => 'searchreplace', 'Req' => TRUE, 'Sx' => ':')
+    /*Porter Plus*/
 );
 
 // Go through all of the supported types and add them to the type description.

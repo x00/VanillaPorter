@@ -79,6 +79,11 @@ class ExportModel {
    public $SourcePrefix = '';
    
    public $ScriptCreateTable = TRUE;
+   
+   /*Porter Plus*/
+   private $_TopLevelFilters=array();
+   protected $_Options=array();
+   /*Porter Plus*/
 
    /**
     * @var array Strucutes that define the format of the export tables.
@@ -590,14 +595,15 @@ class ExportModel {
       $LastID = 0;
       $IDName = 'NOTSET';
       $FirstQuery = TRUE;
-
+    
+      
       $Data = $this->Query($Query);
 
       // Loop through the data and write it to the file.
       $RowCount = 0;
       if ($Data !== FALSE) {
          while (($Row = mysql_fetch_assoc($Data)) !== FALSE) {
-            $Row = (array)$Row; // export%202010-05-06%20210937.txt
+            $Row = (array)$Row; // export%202010-05-06%20210937.txt$TableName
             $this->CurrentRow =& $Row;
             $RowCount++;
             
@@ -609,7 +615,7 @@ class ExportModel {
 
                $FirstQuery = FALSE;
             }
-            $this->WriteRow($fp, $Row, $ExportStructure, $RevMappings);
+            $this->WriteRow($fp, $Row, $ExportStructure, $RevMappings, $TableName);
 
 //            // Loop through the columns in the export structure and grab their values from the row.
 //            $ExRow = array();
@@ -1530,7 +1536,11 @@ class ExportModel {
       fwrite($fp, self::NEWLINE);
    }
    
-   public function WriteRow($fp, $Row, $ExportStructure, $RevMappings) {
+   public function WriteRow($fp, $Row, $ExportStructure, $RevMappings, $TableName) {
+       /*Porter Plus*/
+       $TopLevelFilters = $this->GetTopLevelFilters($TableName);
+        /*Porter Plus*/
+        
       $this->CurrentRow =& $Row;
       
       // Loop through the columns in the export structure and grab their values from the row.
@@ -1552,7 +1562,7 @@ class ExportModel {
             $Callback = $RevMappings[$Field]['Filter'];
             
             $Row2 =& $Row;
-            $Value = call_user_func($Callback, $Value, $Field, $Row2, $Field);
+            $Value = call_user_func($Callback, $Value, $Field, $Row2);
             $Row = $this->CurrentRow;
             $Filtered = TRUE;
          }
@@ -1571,6 +1581,18 @@ class ExportModel {
                if(self::$Mb && mb_detect_encoding($Value) != 'UTF-8')
                   $Value = utf8_encode($Value);
             }
+            
+            /*Porter Plus*/
+            if (isset($TopLevelFilters[$Field])) {
+                $Callback = $TopLevelFilters[$Field];
+                $Row2 =& $Row;
+                $Value = call_user_func($Callback, $Value, $Field, $Row2, $Row);
+                $Row = $this->CurrentRow;
+            }
+            if($this->GetOption('utf8force') && ($ExportStructure[$Value]=='text' || stripos($ExportStructure[$Value],'varchar')!==FALSE)){
+                $Value = utf8_encode($Value);
+            }
+            /*Porter Plus*/
 
             $Value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $Value);
             $Value = self::QUOTE
@@ -1607,6 +1629,74 @@ class ExportModel {
    public function UrlDecode($Value) {
       return urldecode($Value);
    }
+   
+    /*Porter Plus*/
+    public function ParseOperations($Value, $Field, $Row){
+        $SearchReplExtra = $this->GetOption('searchreplace') ? $this->GetOption('searchreplace')  : array();
+        $SearchRepl=array();
+        foreach($this->Options() As $Option){
+            
+            if($Option  =='bbcode2html'){
+                if($Field=='Format' && $Value=='BBCode')  $Value = 'Html';
+                if($Field=='Body' && $Row['Format']=='BBCode')  $Value = BBcode::Parse($Value);
+            }
+        
+            if($Option == 'phpBBfixes'){
+                $SearchRepl['&#58;']=array("repl"=>':',"regexp"=>FALSE);
+                $SearchRepl['&#46;']=array("repl"=>'.',"regexp"=>FALSE);
+                $SearchRepl['&quot;']=array("repl"=>'"',"regexp"=>FALSE);
+                $SearchRepl['&lt;[\-]+']=array("repl"=>'',"regexp"=>TRUE);
+                $SearchRepl['<!--\s+s([^\s]+)\s+-->\s*<img[^>]+>\s*<!--\s+s[^\s]+\s+-->'] =array("repl"=>'\\1',"regexp"=>TRUE);
+                $SearchRepl['&lt;!--\s+s([^\s]+)\s+--&gt;\s*&lt;img[^&]+&gt;\s*&lt;!--\s+s[^\s]+\s+--&gt;'] =array("repl"=>'\\1',"regexp"=>TRUE);
+                $SearchRepl['/?viewtopic\.php([a-z\d=&\?]*?)([&\?](p|post)=(\d+))([a-z\d=&\?]*)'] =array("repl"=>'/discussion/comment/\\4/', "regexp"=>TRUE);
+                $SearchRepl['/?viewtopic\.php([a-z\d=&\?]*?)([&\?](t|topic)=(\d+))([a-z\d=&\?]*)'] =array("repl"=>'/discussion/\\4/x/p1/', "regexp"=>TRUE);
+                $SearchRepl['/?viewforum\.php([a-z\d=&\?]*?)([&\?](f|forum)=(\d+))([a-z\d=&\?]*)'] =array("repl"=>'/categories/\\4/', "regexp"=>TRUE);
+            }
+            
+            if($Option == 'replsearch'){
+                reset($SearchReplExtra);
+                list($key, $val) = each($SearchReplExtra);
+                $SearchRepl[$key] =$val;
+                array_shift($SearchReplExtra);
+            }
+        }
+        
+        if(in_array($Field,array('Body','Name'))){
+            foreach($SearchRepl As $SReplI => $SReplV){
+                if($SReplV["regexp"]){
+                    $Value = preg_replace('`'.$SReplI.'`i',$SReplV['repl'],$Value);
+                }else{
+                    $Value = str_ireplace($SReplI,$SReplV['repl'],$Value);
+                }
+            }
+        }
+        
+        return $Value;
+    }
+
+    public function SetOptions($Options){
+        $this->_Options=$Options;
+    }
+
+    public function GetOption($Option){
+        return @$this->_Options[$Option];
+    }
+
+    public function Options(){
+       return $this->_Options;
+    }
+
+    public function SetTopLevelFilters($Filters){
+
+        $this->_TopLevelFilters=$Filters;
+    }
+
+    public function GetTopLevelFilters($TableName){
+        return @$this->_TopLevelFilters[$TableName];
+    }
+    /*Porter Plus*/
+   
+   
 }
 
  function TimestampToDate($Value) {
@@ -1625,4 +1715,5 @@ function long2ipf($Value) {
       return NULL;
    return long2ip($Value);
 }
+
 ?>

@@ -1,6 +1,7 @@
 <?php
 /**
- * Vanilla 2 Exporter
+ * Vanilla 2 Exporter Plus is a modified version or fork of Vanilla 2 Exporter to provide various parsing options. 
+ * Which carries the following GPL:
  * 
  * This script exports other forum databases to the Vanilla 2 import format.
  * To use this script, copy it to your web server and open it in your browser.
@@ -10,8 +11,8 @@
  * @license GNU GPLv2
  * @package VanillaPorter
  */
-define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '2.0.0');
+define('APPLICATION', 'Vanilla 2 Exporter Plus');
+define('APPLICATION_VERSION', 'b0.2');
 
 if(TRUE || defined('DEBUG'))
    error_reporting(E_ALL);
