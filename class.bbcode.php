@@ -13,6 +13,7 @@
 		       $Raw = preg_replace("#\[(/)?noparse([^a-z\=\]][^\]]*)?\]#i",'<\\1pre>',$Raw);
 		       $Raw = preg_replace("#\[(/)?(php|mysql|css|code)([^a-z\=\]][^\]]*)?\]#i", "<\\1code>", $Raw);
 		       
+               $Raw = preg_replace("#\[quote=[\"']?(.*)?;[0-9]+( [^\]]+)?\]#i",'<blockquote rel="\\1">',$Raw);
 		       $Raw = preg_replace("#\[quote=[\"']?([^\"'\]]+)[\"']?([^a-z\=\]][^\]]*)?\]#i",'<blockquote rel="\\1">',$Raw);
 		       $Raw = preg_replace("#\[(/)?(quote|cite)([^a-z\=\]][^\]]*)?\]#i",'<\\1blockquote>',$Raw);
 		       $Raw = preg_replace("#\[(/)?hide([^a-z\]][^\]]*)?\]#i",'',$Raw);
