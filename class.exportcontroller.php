@@ -72,12 +72,14 @@ abstract class ExportController {
             $ParseFilter =array(
                 'Body'=>array($this->Ex, 'ParseOperations'),
                 'Name'=>array($this->Ex, 'ParseOperations'),
-                'Format'=>array($this->Ex, 'ParseOperations')
+                'Format'=>array($this->Ex, 'ParseOperations'),
+                'Value'=>array($this->Ex, 'ParseOperations')
             );
             $this->Ex->SetTopLevelFilters(array(
                 'Comment' => $ParseFilter,
                 'Discussion' => $ParseFilter,
-                'ConversationMessage' => $ParseFilter
+                'ConversationMessage' => $ParseFilter,
+                'UserMeta' => $ParseFilter
             ));
            
            $this->Ex->SetOptions($this->Options);

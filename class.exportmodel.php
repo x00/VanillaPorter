@@ -1581,7 +1581,6 @@ class ExportModel {
                if(self::$Mb && mb_detect_encoding($Value) != 'UTF-8')
                   $Value = utf8_encode($Value);
             }
-            
             /*Porter Plus*/
             if (isset($TopLevelFilters[$Field])) {
                 $Callback = $TopLevelFilters[$Field];
@@ -1637,8 +1636,8 @@ class ExportModel {
         foreach($this->Options() As $Option){
             
             if($Option  =='bbcode2html'){
-                if($Field=='Format' && $Value=='BBCode')  $Value = 'Html';
-                if($Field=='Body' && $Row['Format']=='BBCode')  $Value = BBcode::Parse($Value);
+                if($Field=='Format')  $Value = 'Html';
+                if($Field!=='Format')  $Value = BBcode::Parse($Value);
             }
         
             if($Option == 'phpBBfixes'){
@@ -1670,7 +1669,7 @@ class ExportModel {
                 }
             }
         }
-        
+
         return $Value;
     }
 
